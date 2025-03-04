@@ -46,3 +46,7 @@ pip install -r requirements.txt
 
 * SK 멀티 Agent구현, 함수호출 및 디버깅
 * Azure AI Agent서비스를 이용한 코드 인터프리터, 파일검색, 함수호출, 멀티 Agent 구현
+
+## Reference
+
+Forked from https://github.com/microsoft/semantic-kernel, then customized and localized for workshop.
