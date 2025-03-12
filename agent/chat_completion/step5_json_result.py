@@ -9,6 +9,7 @@ from semantic_kernel.agents import AgentGroupChat, ChatCompletionAgent
 from semantic_kernel.agents.strategies import TerminationStrategy
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.contents import AuthorRole, ChatMessageContent
+from semantic_kernel.functions import KernelArguments
 
 ###################################################################
 # The following sample demonstrates how to configure an Agent     #
@@ -60,7 +61,8 @@ async def main():
         kernel=kernel,
         name=TUTOR_NAME,
         instructions=TUTOR_INSTRUCTIONS,
-        # execution_settings=settings,
+        arguments=KernelArguments(settings=settings),
+       
     )
 
     # Here a TerminationStrategy subclass is used that will terminate when

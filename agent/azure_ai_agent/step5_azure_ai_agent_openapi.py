@@ -76,8 +76,10 @@ async def main() -> None:
         thread = await client.agents.create_thread()
 
         user_inputs = [
-            "약어 THB로 통화를 사용하는 국가의 이름과 인구는 얼마입니까?",
-            "그 나라의 수도는 무엇인가요?",
+            # "약어 THB로 통화를 사용하는 국가의 이름과 인구는 얼마입니까?",
+            # "그 나라의 수도는 무엇인가요?",
+            # "서울의 날씨는 어떤가요?",
+            "MNT화폐를 사용하는 국가 수도의 날씨",
         ]
 
         try:

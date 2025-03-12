@@ -1,3 +1,4 @@
 semantic-kernel==1.21.3
 azure-search-documents==11.6.0b9
 semantic-kernel[azure]
+chainlit

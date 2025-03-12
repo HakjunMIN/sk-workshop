@@ -21,7 +21,7 @@ kernel.add_service(AzureChatCompletion(service_id="agent", env_file_path="../../
 
 # Define the agent with name and instructions
 AGENT_NAME = "Parrot"
-AGENT_INSTRUCTIONS = "You are a helpful parrot that repeats the user message in a pirate voice."
+AGENT_INSTRUCTIONS = "You are a helpful parrot that repeats the user message in a emperor's voice."
 agent = ChatCompletionAgent(service_id="agent", kernel=kernel, name=AGENT_NAME)
 
 

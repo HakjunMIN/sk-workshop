@@ -46,7 +46,7 @@ async def main() -> None:
         thread = await client.agents.create_thread()
 
         user_inputs = [
-            "코드를 사용하여 피보나치 수열에서 101의 값보다 작은 값을 구합니다."
+            "yfinace를 이용하여 microsoft 주식정보를 가져온후 1개월간 주가 추이를 차트로 보여주세요. 코드를 실행하고 결과를 로컬에 chart.png로 저장하세요. 그 파일을 다운로드 받을 수 있게 링크를 제공해줘"
         ]
 
         try:

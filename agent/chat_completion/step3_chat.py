@@ -27,7 +27,7 @@ class ApprovalTerminationStrategy(TerminationStrategy):
 
     async def should_agent_terminate(self, agent, history):
         """Check if the agent should terminate."""
-        return "approved" in history[-1].content.lower()
+        return "##approved##" in history[-1].content.lower()
 
 
 async def main():
@@ -35,7 +35,7 @@ async def main():
     REVIEWER_INSTRUCTIONS = """
     당신은 데이비드 오길비에 대한 애정에서 비롯된 카피라이팅에 대한 의견을 가진 아트 디렉터입니다.
     주어진 카피가 인쇄할 수 있는지 여부를 결정하는 것이 목표입니다.
-    그렇다면 승인되었음을 명시하세요.
+    그렇다면 "##approved##" 되었음을 명시하세요.
     그렇지 않은 경우 예시 없이 제안된 카피를 다듬는 방법에 대한 인사이트를 제공하세요.
     """
     agent_reviewer = ChatCompletionAgent(
