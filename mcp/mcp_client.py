@@ -32,7 +32,7 @@ class MCPIntegration:
 
     def __init__(self, kernel, mcp_client):
         self.kernel: Kernel = kernel
-        self.mcp_client:MCPClient = mcp_client
+        self.mcp_client: MCPClient = mcp_client
 
     def integrate_tools(self) -> KernelPlugin:
         tools = self.mcp_client.list_tools()
