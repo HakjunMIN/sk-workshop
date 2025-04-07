@@ -49,7 +49,9 @@ pip install -r requirements.txt
 2. Azure AI Agent
   * 코드 인터프리터, 파일검색, 함수호출, 멀티 Agent 구현
 
-## Model Context Protocol (MCP)  with Semantic Kernel 
+## Model Context Protocol (MCP)  with Semantic Kernel
+<details>
+<summary>Being fixed</summary>
 
 ### MCP 서버가동
 ```sh
@@ -93,7 +95,7 @@ class MCPIntegration:
 
 ```
 
-- Full sample: [here](./mcp/)
+</details>
 
 ## Reference
 
