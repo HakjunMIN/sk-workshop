@@ -46,8 +46,52 @@ pip install -r requirements.txt
 
 1. SK 멀티 Agent
   *  함수호출 및 디버깅
-1. Azure AI Agent
+2. Azure AI Agent
   * 코드 인터프리터, 파일검색, 함수호출, 멀티 Agent 구현
+
+## Model Context Protocol (MCP)  with Semantic Kernel 
+
+### MCP 서버가동
+```sh
+cd mcp
+cp ../.env ./
+FLASK_APP=mcp_server flask run
+```
+
+### MCP 클라이언트 실행
+```sh
+python mcp_client.py
+```
+
+- 핵심코드: MCP서버에서 제공하는 툴을 Semantic Kernel Function에 등록하여 Invoke되도록 함.
+
+```python
+class MCPIntegration:
+
+    functions = {}
+
+    def __init__(self, kernel, mcp_client):
+        self.kernel: Kernel = kernel
+        self.mcp_client:MCPClient = mcp_client
+    
+    def integrate_tools(self):
+        tools = self.mcp_client.list_tools()
+        for tool in tools:
+            tool_name = tool["name"]
+            tool_description = tool["description"]
+
+            @kernel_function(name=tool_name, description=tool_description)
+            async def tool_function(input_text):
+                return self.mcp_client.execute_tool(tool_name, input_text)
+            
+            self.functions[tool_name] = tool_function
+
+        return self.kernel.add_functions(plugin_name="MCPPlugin", functions=self.functions)
+
+
+```
+
+- Full sample: [here](./mcp/)
 
 ## Reference
 

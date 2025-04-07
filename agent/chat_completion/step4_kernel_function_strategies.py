@@ -11,6 +11,7 @@ from semantic_kernel.agents.strategies import (
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.contents import AuthorRole, ChatMessageContent
 from semantic_kernel.functions import KernelFunctionFromPrompt
+from semantic_kernel.agents.strategies.selection.sequential_selection_strategy import SequentialSelectionStrategy
 
 ###################################################################
 # The following sample demonstrates how to create a simple,       #
@@ -93,7 +94,8 @@ async def main():
 
     chat = AgentGroupChat(
         agents=[agent_writer, agent_reviewer],
-        termination_strategy=KernelFunctionTerminationStrategy(
+        termination_strategy=
+        KernelFunctionTerminationStrategy(
             agents=[agent_reviewer],
             function=termination_function,
             kernel=_create_kernel_with_chat_completion("termination"),
@@ -101,13 +103,15 @@ async def main():
             history_variable_name="history",
             maximum_iterations=10,
         ),
-        selection_strategy=KernelFunctionSelectionStrategy(
-            function=selection_function,
-            kernel=_create_kernel_with_chat_completion("selection"),
-            result_parser=lambda result: str(result.value[0]) if result.value is not None else COPYWRITER_NAME,
-            agent_variable_name="agents",
-            history_variable_name="history",
-        ),
+        selection_strategy=SequentialSelectionStrategy()
+        
+        # KernelFunctionSelectionStrategy(
+        #     function=selection_function,
+        #     kernel=_create_kernel_with_chat_completion("selection"),
+        #     result_parser=lambda result: str(result.value[0]) if result.value is not None else COPYWRITER_NAME,
+        #     agent_variable_name="agents",
+        #     history_variable_name="history",
+        # ),
     )
 
     input = "새로운 전기차 라인의 슬로건."
