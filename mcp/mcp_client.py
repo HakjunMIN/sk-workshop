@@ -2,6 +2,7 @@ import requests
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.functions import kernel_function
+from semantic_kernel.functions.kernel_plugin import KernelPlugin
 
 
 class MCPClient:
@@ -32,8 +33,8 @@ class MCPIntegration:
     def __init__(self, kernel, mcp_client):
         self.kernel: Kernel = kernel
         self.mcp_client:MCPClient = mcp_client
-    
-    def integrate_tools(self):
+
+    def integrate_tools(self) -> KernelPlugin:
         tools = self.mcp_client.list_tools()
         for tool in tools:
             tool_name = tool["name"]
@@ -69,12 +70,10 @@ if __name__ == "__main__":
     mcp_integration = MCPIntegration(kernel, client)
     kernel_functions = mcp_integration.integrate_tools()
 
-    # Changed: Access the plugin using the plugins attribute
     async def main():
         input_text = "Python is fun!"
         print(f"Trying to reverse: '{input_text}'")
-        
-        # Call the tool function using the kernel
+
         result = await kernel.invoke(kernel_functions['reverse'], input_text=input_text)
         print(f"Reversed result: '{result}'")
 
