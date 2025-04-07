@@ -63,7 +63,9 @@ FLASK_APP=mcp_server flask run
 python mcp_client.py
 ```
 
-- 핵심코드: MCP서버에서 제공하는 툴을 Semantic Kernel Function에 등록하여 Invoke되도록 함.
+### 핵심코드
+
+* MCP서버에서 제공하는 툴을 Semantic Kernel Function에 등록하여 Invoke되도록 함.
 
 ```python
 class MCPIntegration:
