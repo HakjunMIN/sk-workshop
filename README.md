@@ -66,14 +66,17 @@ uv run mcp_client.py
 
 ### 핵심코드
 
-* MCP서버에서 제공하는 툴을 Semantic Kernel Function에 등록하여 Invoke되도록 함.
+* 이 코드는 MCP 서버에서 제공하는 도구들을 동적으로 Semantic Kernel Function에 통합하는 기능을 구현한 것임.  
+* `integrate_tools` 메서드는 MCP 서버에서 도구 목록을 가져와서 각 도구의 이름, 설명, 입력 스키마를 기반으로 동적으로 함수를 만듦.  
+* 만들어진 함수는 `exec`를 써서 런타임에 정의되고, 각 도구의 호출 로직을 포함함. 이후, 만들어진 함수는 `kernel_function` 데코레이터를 통해 Semantic Kernel에 등록되고, 마지막으로 `self.kernel.add_functions`를 통해 `MCPPlugin`으로 추가됨.  
+* 이 방식은 도구의 입력 스키마에 따라 유연하게 함수가 만들어지고 호출될 수 있도록 설계된 것임.
 
 ```python
 
-    async def integrate_tools(self) -> KernelPlugin:
+async def integrate_tools(self) -> KernelPlugin:
         """Integrate tools into the kernel"""
         functions = {}
-       
+        response = await self.session.list_tools()
         available_tools = [{ 
             "name": tool.name,
             "description": tool.description,
@@ -85,11 +88,20 @@ uv run mcp_client.py
             tool_description = tool["description"]
             tool_input_schema = tool["input_schema"]
 
-            @kernel_function(name=tool_name, description=tool_description)
-            async def tool_function(input_text: str):
-                input_data = {"input": input_text}
-                return await self.session.call_tool(tool_name, input_data)
-                        
+            # 인자 값 입력스키마에 따라 동적 함수 생성
+            prop_names = list(tool_input_schema.get("properties", {}).keys())
+            params_str = ", ".join(prop_names)  # e.g., "input" or "param1, param2"
+            input_data_mapping = ", ".join([f"'{name}': {name}" for name in prop_names])
+            func_code = (
+                f"async def dynamic_tool_function({params_str}):\n"
+                f"    input_data = {{{input_data_mapping}}}\n"
+                f"    return await self.session.call_tool(tool_name, input_data)"
+            )
+            local_vars = {}
+            exec(func_code, {"self": self, "tool_name": tool_name}, local_vars)
+            dynamic_tool_function = local_vars["dynamic_tool_function"]
+
+            tool_function = kernel_function(name=tool_name, description=tool_description)(dynamic_tool_function)
             functions[tool_name] = tool_function
         return self.kernel.add_functions(plugin_name="MCPPlugin", functions=functions)
 
