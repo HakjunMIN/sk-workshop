@@ -1,29 +1,45 @@
-from flask import Flask, request, jsonify
+import argparse
 
-app = Flask(__name__)
+import uvicorn
+from starlette.applications import Starlette
+from starlette.requests import Request
+from starlette.routing import Mount, Route
+from mcp.server.fastmcp import FastMCP
+from mcp.server.sse import SseServerTransport
 
-# MCP 서버에서 제공할 도구 목록
-tools = [
-    {"name": "echo", "description": "Echoes the input text."},
-    {"name": "reverse", "description": "Reverses the input text."}
-]
+mcp = FastMCP("String Manipulation Plugin", "1.0.0")
 
-@app.route('/tools', methods=['GET'])
-def list_tools():
-    return jsonify({"tools": tools})
+@mcp.tool()
+async def reverse(input:str) -> str:
+    """reverse the input string"""
+    return input[::-1]
 
-@app.route('/execute', methods=['POST'])
-def execute_tool():
-    data = request.json
-    tool_name = data.get("tool")
-    input_text = data.get("input")
+async def handle_sse(request: Request) -> None:
+        async with sse.connect_sse(
+                request.scope,
+                request.receive,
+                request._send,  
+        ) as (read_stream, write_stream):
+            await mcp_server.run(
+                read_stream,
+                write_stream,
+                mcp_server.create_initialization_options(),
+            )
 
-    if tool_name == "echo":
-        return jsonify({"result": input_text})
-    elif tool_name == "reverse":
-        return jsonify({"result": input_text[::-1]})
-    else:
-        return jsonify({"error": "Tool not found"}), 404
+if __name__ == "__main__":
+    mcp_server = mcp._mcp_server 
+    parser = argparse.ArgumentParser(description='Run MCP SSE-based server')
+    parser.add_argument('--host', default='0.0.0.0', help='Host to bind to')
+    parser.add_argument('--port', type=int, default=8080, help='Port to listen on')
+    args = parser.parse_args()
 
-if __name__ == '__main__':
-    app.run(port=5000)
+    sse = SseServerTransport("/messages/")
+    starlette_app = Starlette(
+        debug=True,
+        routes=[
+            Route("/sse", endpoint=handle_sse),
+            Mount("/messages/", app=sse.handle_post_message),
+        ],
+    )
+
+    uvicorn.run(starlette_app, host=args.host, port=args.port)

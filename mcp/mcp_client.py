@@ -1,81 +1,87 @@
-import requests
+import asyncio
+from contextlib import AsyncExitStack
+from typing import Optional
+
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.functions import kernel_function
 from semantic_kernel.functions.kernel_plugin import KernelPlugin
 
-
+from mcp import ClientSession
+from mcp.client.sse import sse_client
 class MCPClient:
-    def __init__(self, server_url):
-        self.server_url = server_url
+    def __init__(self, kernel: Kernel):
+        self.session: Optional[ClientSession] = None
+        self.exit_stack = AsyncExitStack()
+        self.kernel = kernel
 
-    def list_tools(self):
-        print(f"Server URL: {self.server_url}")
-        response = requests.get(f"{self.server_url}/tools")
-        print (f"Response: {response.json()}")
-        if response.status_code == 200:
-            return response.json()["tools"]
-        else:
-            raise Exception("Failed to retrieve tools")
 
-    def execute_tool(self, tool_name, input_text):
-        payload = {"tool": tool_name, "input": input_text}
-        response = requests.post(f"{self.server_url}/execute", json=payload)
-        if response.status_code == 200:
-            return response.json()["result"]
-        else:
-            raise Exception("Failed to execute tool")
+    async def connect_to_sse_server(self, server_url: str):
+        """Connect to an MCP server running with SSE transport"""
+        self._streams_context = sse_client(url=server_url)
+        streams = await self._streams_context.__aenter__()
 
-class MCPIntegration:
+        self._session_context = ClientSession(*streams)
+        self.session: ClientSession = await self._session_context.__aenter__()
 
-    functions = {}
+        await self.session.initialize()
 
-    def __init__(self, kernel, mcp_client):
-        self.kernel: Kernel = kernel
-        self.mcp_client: MCPClient = mcp_client
+    async def cleanup(self):
+        """Properly clean up the session and streams"""
+        if self._session_context:
+            await self._session_context.__aexit__(None, None, None)
+        if self._streams_context:
+            await self._streams_context.__aexit__(None, None, None)
 
-    def integrate_tools(self) -> KernelPlugin:
-        tools = self.mcp_client.list_tools()
-        for tool in tools:
+    async def integrate_tools(self) -> KernelPlugin:
+        """Integrate tools into the kernel"""
+        functions = {}
+        print("Initialized SSE client...")
+        print("Listing tools...")
+        response = await self.session.list_tools()
+        tools = response.tools
+        print("Tools:", tools)
+
+        available_tools = [{ 
+            "name": tool.name,
+            "description": tool.description,
+            "input_schema": tool.inputSchema
+        } for tool in response.tools]
+
+        for tool in available_tools:
             tool_name = tool["name"]
             tool_description = tool["description"]
+            tool_input_schema = tool["input_schema"]
 
             @kernel_function(name=tool_name, description=tool_description)
-            async def tool_function(input_text):
-                return self.mcp_client.execute_tool(tool_name, input_text)
-            
-            self.functions[tool_name] = tool_function
+            async def tool_function(input_text: str):
+                #TODO: Handle input schema
+                input_data = {"input": input_text}
+                return await self.session.call_tool(tool_name, input_data)
+                        
+            functions[tool_name] = tool_function
+        return self.kernel.add_functions(plugin_name="MCPPlugin", functions=functions)
 
-        return self.kernel.add_functions(plugin_name="MCPPlugin", functions=self.functions)
-
-if __name__ == "__main__":
-    import asyncio
-
-    client = MCPClient("http://127.0.0.1:5000")
-
-    # 도구 목록 출력
-    tools = client.list_tools()
-    print("Available tools:")
-    for tool in tools:
-        print(f"- {tool['name']}: {tool['description']}")
-
-    # 도구 실행 예시
-    result = client.execute_tool("reverse", "Hello World!")
-    print(f"Result: {result}")
-
+async def main():
+    MCE_SERVER_URL = "http://localhost:8080/sse"
+    
     kernel = Kernel()
+    client = MCPClient(kernel)    
     openai_service = AzureChatCompletion()
-    kernel.add_service(openai_service)
-
-    mcp_integration = MCPIntegration(kernel, client)
-    kernel_functions = mcp_integration.integrate_tools()
-
-    async def main():
+    kernel.add_service(openai_service)    
+        
+    try:
+        await client.connect_to_sse_server(server_url=MCE_SERVER_URL)
         input_text = "Python is fun!"
         print(f"Trying to reverse: '{input_text}'")
 
+        kernel_functions = await client.integrate_tools()
+
         result = await kernel.invoke(kernel_functions['reverse'], input_text=input_text)
         print(f"Reversed result: '{result}'")
+    finally:
+        await client.cleanup()
 
-    
+if __name__ == "__main__":
+    import sys
     asyncio.run(main())
