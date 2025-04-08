@@ -14,6 +14,11 @@ async def reverse(input:str) -> str:
     """reverse the input string"""
     return input[::-1]
 
+@mcp.tool()
+async def add(a: int, b: int) -> int:
+    """add two numbers"""
+    return a + b
+
 async def handle_sse(request: Request) -> None:
         async with sse.connect_sse(
                 request.scope,
