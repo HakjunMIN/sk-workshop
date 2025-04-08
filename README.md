@@ -94,6 +94,7 @@ uv run mcp_client.py
         return self.kernel.add_functions(plugin_name="MCPPlugin", functions=functions)
 
 ```
+* 전체 샘플은 [여기](./mcp)
 
 ## Reference
 
