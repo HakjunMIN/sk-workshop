@@ -51,6 +51,8 @@ pip install -r requirements.txt
 
 ## Model Context Protocol (MCP)  with Semantic Kernel
 
+* Semantic Kernel Python과 MCP Integration 샘플임. 
+  (Integrating Semantic Kernel Python with MCP)
 
 ### MCP 서버가동
 ```sh
