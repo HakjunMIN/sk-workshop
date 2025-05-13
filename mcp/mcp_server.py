@@ -6,6 +6,7 @@ from starlette.requests import Request
 from starlette.routing import Mount, Route
 from mcp.server.fastmcp import FastMCP
 from mcp.server.sse import SseServerTransport
+from starlette.responses import PlainTextResponse
 
 mcp = FastMCP("String Manipulation Plugin", "1.0.0")
 
@@ -20,16 +21,18 @@ async def add(a: int, b: int) -> int:
     return a + b
 
 async def handle_sse(request: Request) -> None:
-        async with sse.connect_sse(
-                request.scope,
-                request.receive,
-                request._send,  
-        ) as (read_stream, write_stream):
-            await mcp_server.run(
-                read_stream,
-                write_stream,
-                mcp_server.create_initialization_options(),
-            )
+   
+    async with sse.connect_sse(
+            request.scope,
+            request.receive,
+            request._send,  
+    ) as (read_stream, write_stream):
+        await mcp_server.run(
+            read_stream,
+            write_stream,
+            mcp_server.create_initialization_options(),
+        )
+    return PlainTextResponse("SSE connection closed.")
 
 if __name__ == "__main__":
     mcp_server = mcp._mcp_server 
