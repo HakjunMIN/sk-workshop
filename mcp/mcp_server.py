@@ -6,7 +6,7 @@ from starlette.requests import Request
 from starlette.routing import Mount, Route
 from mcp.server.fastmcp import FastMCP
 from mcp.server.sse import SseServerTransport
-from starlette.responses import PlainTextResponse
+from starlette.responses import PlainTextResponse, Response
 
 mcp = FastMCP("String Manipulation Plugin", "1.0.0")
 
@@ -20,7 +20,7 @@ async def add(a: int, b: int) -> int:
     """add two numbers"""
     return a + b
 
-async def handle_sse(request: Request) -> None:
+async def handle_sse(request: Request) -> Response:
    
     async with sse.connect_sse(
             request.scope,
